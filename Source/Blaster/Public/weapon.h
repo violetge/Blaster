@@ -38,10 +38,6 @@ public:
 
 private:
 
-
-
-
-
 	void OnSphereOverlap(
 		UPrimitiveComponent* OverlappedComponent,
 		AActor* OtherActor,
@@ -50,7 +46,6 @@ private:
 		bool bFromSweep,
 		const FHitResult& SweepResult
 	);
-
 
 	void OnSphereEndOverlap(
 		UPrimitiveComponent* OverlappedComponent,

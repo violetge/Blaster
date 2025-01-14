@@ -26,9 +26,7 @@ Aweapon::Aweapon()
 
 	CollisionComponent = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComponent"));
 	CollisionComponent->SetupAttachment(SceneComponent);
-	//绑定碰撞事件
-	CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &Aweapon::OnSphereOverlap);
-	CollisionComponent->OnComponentEndOverlap.AddDynamic(this, &Aweapon::OnSphereEndOverlap);
+
 
 	PickupWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickupWidget"));
 	PickupWidget->SetupAttachment(SceneComponent);
@@ -46,6 +44,11 @@ void Aweapon::BeginPlay()
 	CollisionComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	CollisionComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
 
+
+	//绑定碰撞事件
+	CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &Aweapon::OnSphereOverlap);
+	CollisionComponent->OnComponentEndOverlap.AddDynamic(this, &Aweapon::OnSphereEndOverlap);
+
 	PickupWidget->SetVisibility(false);
 	
 }
@@ -60,7 +63,7 @@ void Aweapon::Tick(float DeltaTime)
 void Aweapon::ShowpickupWidget(bool IsShow)
 {
 	PickupWidget->SetVisibility(IsShow);
-	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("SetVisibility: %s"), IsShow ? TEXT("true") : TEXT("false")));
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("SetVisibility: %s"), IsShow ? TEXT("true") : TEXT("false")));
 }
 
 FTransform Aweapon::GetGripSocketTransform() const
@@ -74,6 +77,7 @@ FTransform Aweapon::GetGripSocketTransform() const
 
 void Aweapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Overlap"));
 	ABlasterCharacter* Character = Cast<ABlasterCharacter>(OtherActor);
 	if (Character)
 	{
@@ -88,6 +92,7 @@ void Aweapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 
 void Aweapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
+	UE_LOG(LogTemp, Warning, TEXT("EndOverlap"));
 	ABlasterCharacter* Character = Cast<ABlasterCharacter>(OtherActor);
 	if (Character)
 	{
