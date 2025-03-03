@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
 #include "InputMappingContext.h"
+#include "Animation/AnimMontage.h" 
 #include "BlasterCharacter.generated.h"
 
 class UInputComponent;
@@ -16,6 +17,7 @@ class UInputAction;
 class UcombatComponent;
 class Aweapon;
 class UCharacterMovementComponent;
+class UAnimMontage;
 
 UCLASS()
 class BLASTER_API ABlasterCharacter : public ACharacter
@@ -25,6 +27,9 @@ class BLASTER_API ABlasterCharacter : public ACharacter
 public:
 	// Sets default values for this character's properties
 	ABlasterCharacter();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "MyBlueprintFunctions")
+	void PlayFireMontage();
 
 protected:
 	// Called when the game starts or when spawned
@@ -38,6 +43,8 @@ protected:
 	void Aim_Pressed();
 	void Aim_Released();
 	void AttachWeapon();
+	void Fire_Pressed();
+	void Fire_Released();
 	void PostInitializeComponents() override;
 
 private:
@@ -62,6 +69,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UcombatComponent* CombatComponent;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character")
+	UAnimMontage* FireWeaponMontage;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputMappingContext* InputMappingContext;
 
@@ -74,8 +84,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputAction* IA_Aim;
 
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-	//UInputAction* IA_Fire;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	class UInputAction* IA_Fire;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputAction* IA_MoveForward;

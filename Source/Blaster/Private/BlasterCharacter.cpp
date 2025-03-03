@@ -86,6 +86,10 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		//Aim
 		EnhancedInputComponent->BindAction(IA_Aim, ETriggerEvent::Started, this, &ABlasterCharacter::Aim_Pressed);
 		EnhancedInputComponent->BindAction(IA_Aim, ETriggerEvent::Completed, this, &ABlasterCharacter::Aim_Released);
+
+		//Fire
+		EnhancedInputComponent->BindAction(IA_Fire, ETriggerEvent::Started, this, &ABlasterCharacter::Fire_Pressed);
+		EnhancedInputComponent->BindAction(IA_Fire, ETriggerEvent::Completed, this, &ABlasterCharacter::Fire_Released);
 	}
 
 }
@@ -140,6 +144,8 @@ void ABlasterCharacter::AttachWeapon()
 	UE_LOG(LogTemp, Display, TEXT("Started"));
 }
 
+
+
 void ABlasterCharacter::Action_Crouch()
 {
 	//别忘记加这个 蓝图里设置也可以 不然bIsCrouched不会变的哦
@@ -186,6 +192,23 @@ void ABlasterCharacter::PostInitializeComponents()
 	if (CombatComponent)
 	{
 		CombatComponent->OwnerCharacter = this;
+
+	}
+}
+
+void ABlasterCharacter::Fire_Pressed()
+{
+	if (CombatComponent && CombatComponent->IsWeaponEquipped && CombatComponent->CurrentWeapon)
+	{
+		PlayFireMontage();
+		CombatComponent->CurrentWeapon->Fire();
+	}
+}
+
+void ABlasterCharacter::Fire_Released()
+{
+	if (CombatComponent && CombatComponent->IsWeaponEquipped && CombatComponent->CurrentWeapon)
+	{
 
 	}
 }

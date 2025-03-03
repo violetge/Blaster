@@ -36,6 +36,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Projectile Type")
 	TSubclassOf<class ABullet> ProjectileClass;
 
+	void Fire();
+
 private:
 
 	void OnSphereOverlap(
@@ -54,5 +56,5 @@ private:
 		int32 OtherBodyIndex
 	);
 
-	void Fire();
+
 };
