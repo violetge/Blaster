@@ -4,6 +4,9 @@
 #include "weapon.h"
 #include "Components/SphereComponent.h"
 #include "BlasterCharacter.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Components/ArrowComponent.h"
+#include "Camera/CameraComponent.h"
 #include "Bullet.h"
 
 // Sets default values
@@ -30,6 +33,9 @@ Aweapon::Aweapon()
 
 	PickupWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickupWidget"));
 	PickupWidget->SetupAttachment(SceneComponent);
+
+	ArrowComponent = CreateDefaultSubobject<UArrowComponent>(TEXT("ArrowComponent"));
+	ArrowComponent->SetupAttachment(SceneComponent);
 
 
 }
@@ -77,13 +83,13 @@ FTransform Aweapon::GetGripSocketTransform() const
 
 void Aweapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Overlap"));
+	/*UE_LOG(LogTemp, Warning, TEXT("Overlap"));*/
 	ABlasterCharacter* Character = Cast<ABlasterCharacter>(OtherActor);
 	if (Character)
 	{
 		Character->overlappingweapon = this;
 		ShowpickupWidget(true);
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("SetVisibility: Overlap")));
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("SetVisibility: Overlap")));
 	}
 
 
@@ -92,40 +98,61 @@ void Aweapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 
 void Aweapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	UE_LOG(LogTemp, Warning, TEXT("EndOverlap"));
+	/*UE_LOG(LogTemp, Warning, TEXT("EndOverlap"));*/
 	ABlasterCharacter* Character = Cast<ABlasterCharacter>(OtherActor);
 	if (Character)
 	{
 		Character->overlappingweapon = nullptr;
 		ShowpickupWidget(false);
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("SetVisibility: EndOverlap")));
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("SetVisibility: EndOverlap")));
 	}
 }
 
+// 其实应该在武器上开始射线检测 但是要配合瞄准偏移 不然开火的时候都是一个方向 （改了再删）
+// 其实射线的EDN应该是在屏幕的中心点 要不然人物动画会让武器乱动 直直的发射是不会在屏幕中心的
 void Aweapon::Fire()
 {
-	if (ProjectileClass)
+	WeaponMesh->PlayAnimation(WeaponFire, false);
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("FIRE")));
+
+	FVector Start = ArrowComponent->GetComponentLocation();   
+	FVector End;
+
+	//获取屏幕中心点
+	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+	if (PlayerController)
 	{
-		FVector MuzzleLocation = WeaponMesh->GetSocketLocation(FName("MuzzleFlash"));
-		FRotator MuzzleRotation = WeaponMesh->GetSocketRotation(FName("MuzzleFlash"));
+		// 获取摄像机的位置和旋转
+		FVector CameraLocation;
+		FRotator CameraRotation;
+		PlayerController->GetPlayerViewPoint(CameraLocation, CameraRotation);
 
-		UWorld* World = GetWorld();
-		if (World)
-		{
-			FActorSpawnParameters SpawnParams;
-			SpawnParams.Owner = this;
-			SpawnParams.Instigator = GetInstigator();
+		// 计算摄像机正前方终点（屏幕中心对应的世界坐标方向）
+		FVector CameraDirection = CameraRotation.Vector();
+		End = CameraLocation + CameraDirection * 10000.0f; // 射线长度设为10000单位
 
-			// Spawn the projectile at the muzzle
-			ABullet* Projectile = World->SpawnActor<ABullet>(ProjectileClass, MuzzleLocation, MuzzleRotation, SpawnParams);
-			//if (Projectile)
-			//{
-			//	// Set the projectile's initial trajectory
-			//	FVector LaunchDirection = MuzzleRotation.Vector();
-			//	Projectile->FireInDirection(LaunchDirection);
-			//}
-		}
+		// 调整射线起点为武器位置，方向指向摄像机瞄准点
+		FVector WeaponToEnd = End - Start;
+		WeaponToEnd.Normalize();
+		End = Start + WeaponToEnd * 10000.0f; // 保持射线长度一致
 	}
+
+	FHitResult HitResult;
+	FCollisionQueryParams CollisionParams;
+	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, CollisionParams);
+
+	// 绘制射线
+	DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 1, 0, 1);
+
+	if (bHit && HitResult.GetActor())
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Hit: %s"), *HitResult.GetActor()->GetName()));
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Missed")));
+	}
+	
 }
 
 

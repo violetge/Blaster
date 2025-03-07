@@ -27,9 +27,16 @@ class BLASTER_API ABlasterCharacter : public ACharacter
 public:
 	// Sets default values for this character's properties
 	ABlasterCharacter();
-
+	//C++定义 蓝图实现
 	UFUNCTION(BlueprintImplementableEvent, Category = "MyBlueprintFunctions")
 	void PlayFireMontage();
+
+
+	// Add this declaration to the ABlasterCharacter class
+	UCameraComponent* GetFollowCamera() const { return CameraComponent; }
+
+
+
 
 protected:
 	// Called when the game starts or when spawned

@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "Components/WidgetComponent.h"
 #include "WeaponBase.h" 
+#include "Animation/AnimMontage.h" 
 #include "weapon.generated.h"
 
 class USceneComponent;
@@ -13,6 +14,7 @@ class UskeletalMeshComponent;
 class USphereComponent;
 class UWidgetComponent;
 class UstaticMeshComponent;
+class UAnimationAsset;
 
 UCLASS()
 class BLASTER_API Aweapon : public AWeaponBase
@@ -36,7 +38,14 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Projectile Type")
 	TSubclassOf<class ABullet> ProjectileClass;
 
-	void Fire();
+	virtual void Fire() override;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character")
+	UAnimationAsset* WeaponFire;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	class UArrowComponent* ArrowComponent;
 
 private:
 
