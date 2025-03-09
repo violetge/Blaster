@@ -7,13 +7,15 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/ArrowComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Engine/SkeletalMeshSocket.h"
+#include "BulletShell.h"
 #include "Bullet.h"
 
 // Sets default values
 Aweapon::Aweapon()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
 
 
@@ -63,7 +65,6 @@ void Aweapon::BeginPlay()
 void Aweapon::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 void Aweapon::ShowpickupWidget(bool IsShow)
@@ -108,12 +109,10 @@ void Aweapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 	}
 }
 
-// 其实应该在武器上开始射线检测 但是要配合瞄准偏移 不然开火的时候都是一个方向 （改了再删）
 // 其实射线的EDN应该是在屏幕的中心点 要不然人物动画会让武器乱动 直直的发射是不会在屏幕中心的
 void Aweapon::Fire()
 {
 	WeaponMesh->PlayAnimation(WeaponFire, false);
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("FIRE")));
 
 	FVector Start = ArrowComponent->GetComponentLocation();   
 	FVector End;
@@ -135,6 +134,12 @@ void Aweapon::Fire()
 		FVector WeaponToEnd = End - Start;
 		WeaponToEnd.Normalize();
 		End = Start + WeaponToEnd * 10000.0f; // 保持射线长度一致
+
+		 //设置武器的旋转，使其与射线方向一致
+		FRotator WeaponRotation = WeaponToEnd.Rotation();
+		SetActorRotation(WeaponRotation);
+
+
 	}
 
 	FHitResult HitResult;
@@ -152,7 +157,23 @@ void Aweapon::Fire()
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Missed")));
 	}
-	
+
+	// 生成弹壳
+	if (WeaponMesh && BulletShellClass)
+	{
+		const USkeletalMeshSocket* AmmoEjectSocket = WeaponMesh->GetSocketByName(FName("AmmoEject"));
+		if (AmmoEjectSocket)
+		{
+			FTransform SocketTransform = AmmoEjectSocket->GetSocketTransform(WeaponMesh);
+
+			UWorld* World = GetWorld();
+			if (World)
+			{
+				ABulletShell* BulletShell = World->SpawnActor<ABulletShell>(BulletShellClass, SocketTransform.GetLocation(), SocketTransform.GetRotation().Rotator());
+				BulletShell->ApplyRandomForce();
+			}
+		}
+	}
 }
 
 

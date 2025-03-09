@@ -34,8 +34,15 @@ public:
 
 	// Add this declaration to the ABlasterCharacter class
 	UCameraComponent* GetFollowCamera() const { return CameraComponent; }
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	bool IsFire;
 
+	// 声明一个函数，用于获取射线方向
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	FRotator GetAimDirection() const;
 
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void UpdateWeaponRotation();
 
 
 protected:

@@ -35,10 +35,11 @@ public:
 	void ShowpickupWidget(bool IsShow);	  // 显示或隐藏拾取小部件
 	FTransform GetGripSocketTransform() const;
 
-	UPROPERTY(EditAnywhere, Category = "Projectile Type")
-	TSubclassOf<class ABullet> ProjectileClass;
+	UPROPERTY(EditAnywhere, Category = "BulletShell Type")
+	TSubclassOf<class ABulletShell> BulletShellClass;
 
 	virtual void Fire() override;
+	FVector CurrentAimDirection; // 存储当前帧的瞄准方向
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character")

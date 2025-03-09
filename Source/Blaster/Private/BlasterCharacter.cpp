@@ -49,6 +49,13 @@ void ABlasterCharacter::Tick(float DeltaTime)
 
 	UpdateWeaponGripTransform();
 
+
+	// 只有在武器装备时才实时更新武器的旋转
+	if (CombatComponent && CombatComponent->IsWeaponEquipped)
+	{
+		UpdateWeaponRotation();
+	}
+
 }
 
 // Called to bind functionality to input
@@ -200,6 +207,7 @@ void ABlasterCharacter::Fire_Pressed()
 {
 	if (CombatComponent && CombatComponent->IsWeaponEquipped && CombatComponent->CurrentWeapon)
 	{
+		IsFire = true;
 		PlayFireMontage();
 		CombatComponent->CurrentWeapon->Fire();
 	}
@@ -209,7 +217,30 @@ void ABlasterCharacter::Fire_Released()
 {
 	if (CombatComponent && CombatComponent->IsWeaponEquipped && CombatComponent->CurrentWeapon)
 	{
+		IsFire = false;
+	}
+}
 
+// 实现获取射线方向的函数
+FRotator ABlasterCharacter::GetAimDirection() const
+{
+	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+	if (PlayerController)
+	{
+		FVector CameraLocation;
+		FRotator CameraRotation;
+		PlayerController->GetPlayerViewPoint(CameraLocation, CameraRotation);
+		return CameraRotation;
+	}
+	return FRotator::ZeroRotator;
+}
+
+void ABlasterCharacter::UpdateWeaponRotation()
+{
+	if (CombatComponent && CombatComponent->IsWeaponEquipped && CombatComponent->CurrentWeapon)
+	{
+		FRotator AimDirection = GetAimDirection();
+		CombatComponent->CurrentWeapon->SetActorRotation(AimDirection);
 	}
 }
 
