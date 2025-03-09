@@ -27,6 +27,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	bool IsAiming;
 
+	float DefaultFOV;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float ZoomedFOV;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float ZoomInterpSpeed;
+
+	float CurrentFOV;
+	void InterpFOV(float DeltaTime);
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

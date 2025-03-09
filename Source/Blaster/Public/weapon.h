@@ -35,8 +35,8 @@ public:
 	void ShowpickupWidget(bool IsShow);	  // 显示或隐藏拾取小部件
 	FTransform GetGripSocketTransform() const;
 
-	UPROPERTY(EditAnywhere, Category = "BulletShell Type")
-	TSubclassOf<class ABulletShell> BulletShellClass;
+	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
+	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomInterpSpeed; }
 
 	virtual void Fire() override;
 	FVector CurrentAimDirection; // 存储当前帧的瞄准方向
@@ -48,6 +48,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	class UArrowComponent* ArrowComponent;
 
+	UPROPERTY(EditAnywhere)
+	float ZoomedFOV;
+
+	UPROPERTY(EditAnywhere)
+	float ZoomInterpSpeed;
+
+	UPROPERTY(EditAnywhere, Category = "BulletShell Type")
+	TSubclassOf<class ABulletShell> BulletShellClass;
 private:
 
 	void OnSphereOverlap(

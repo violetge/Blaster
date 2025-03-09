@@ -27,6 +27,8 @@ class BLASTER_API ABlasterCharacter : public ACharacter
 public:
 	// Sets default values for this character's properties
 	ABlasterCharacter();
+
+	FORCEINLINE UCameraComponent* GetCameraComponent()const;
 	//C++定义 蓝图实现
 	UFUNCTION(BlueprintImplementableEvent, Category = "MyBlueprintFunctions")
 	void PlayFireMontage();

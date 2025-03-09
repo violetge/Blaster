@@ -34,6 +34,11 @@ ABlasterCharacter::ABlasterCharacter()
 
 }
 
+UCameraComponent* ABlasterCharacter::GetCameraComponent() const
+{
+	return CameraComponent;
+}
+
 // Called when the game starts or when spawned
 void ABlasterCharacter::BeginPlay()
 {
