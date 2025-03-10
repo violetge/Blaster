@@ -144,6 +144,8 @@ void Aweapon::Fire()
 
 	FHitResult HitResult;
 	FCollisionQueryParams CollisionParams;
+	CollisionParams.AddIgnoredActor(this); // 忽略武器自身
+	CollisionParams.AddIgnoredActor(GetOwner()); // 忽略武器的拥有者
 	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, CollisionParams);
 
 	// 绘制射线
@@ -152,10 +154,14 @@ void Aweapon::Fire()
 	if (bHit && HitResult.GetActor())
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Hit: %s"), *HitResult.GetActor()->GetName()));
-	}
-	else
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Missed")));
+
+		// 检查是否击中了 ABlasterCharacter
+		ABlasterCharacter* HitCharacter = Cast<ABlasterCharacter>(HitResult.GetActor());
+		if (HitCharacter)
+		{
+			// 调用 PlayHitReactMontage
+			HitCharacter->PlayHitReactMontage();
+		}
 	}
 
 	// 生成弹壳

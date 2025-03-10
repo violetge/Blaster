@@ -33,6 +33,9 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "MyBlueprintFunctions")
 	void PlayFireMontage();
 
+	UFUNCTION(BlueprintImplementableEvent, Category = "MyBlueprintFunctions")
+	void PlayHitReactMontage();
+
 
 	// Add this declaration to the ABlasterCharacter class
 	UCameraComponent* GetFollowCamera() const { return CameraComponent; }
@@ -85,8 +88,11 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UcombatComponent* CombatComponent;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Montage")
 	UAnimMontage* FireWeaponMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Montage")
+	UAnimMontage* HitReactMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputMappingContext* InputMappingContext;
