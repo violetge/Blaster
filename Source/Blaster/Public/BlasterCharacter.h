@@ -19,6 +19,13 @@ class Aweapon;
 class UCharacterMovementComponent;
 class UAnimMontage;
 
+UENUM(BlueprintType)
+enum class EFireMode : uint8
+{
+	Single UMETA(DisplayName = "Single"),
+	Auto UMETA(DisplayName = "Auto")
+};
+
 UCLASS()
 class BLASTER_API ABlasterCharacter : public ACharacter
 {
@@ -64,10 +71,23 @@ protected:
 	void AttachWeapon();
 	void Fire_Pressed();
 	void Fire_Released();
+	void ToggleFireMode();
 	void PostInitializeComponents() override;
 
-private:
 
+private:
+	// 计时器句柄
+	FTimerHandle FireTimerHandle;
+
+	// 开火模式
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	EFireMode FireMode;
+
+
+	// 自动开火函数
+	void StartFire();
+	void StopFire();
+	void HandleFire();
 
 public:	
 	// Called every frame
@@ -123,6 +143,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputAction* PickUpWeapon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputAction* IA_ToggleFireMode;
 
 	//武器在weapon.cpp重叠函数中赋值
 	Aweapon* overlappingweapon;

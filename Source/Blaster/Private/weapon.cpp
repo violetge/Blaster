@@ -157,7 +157,7 @@ void Aweapon::Fire()
 
 		// 检查是否击中了 ABlasterCharacter
 		ABlasterCharacter* HitCharacter = Cast<ABlasterCharacter>(HitResult.GetActor());
-		if (HitCharacter)
+		if (HitCharacter && HitResult.Component == HitCharacter->GetMesh())
 		{
 			// 调用 PlayHitReactMontage
 			HitCharacter->PlayHitReactMontage();

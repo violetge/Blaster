@@ -41,6 +41,10 @@ public:
 	virtual void Fire() override;
 	FVector CurrentAimDirection; // 存储当前帧的瞄准方向
 
+	// 射击间隔
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	float FireRate = 0;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character")
 	UAnimationAsset* WeaponFire;

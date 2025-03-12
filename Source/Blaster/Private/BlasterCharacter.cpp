@@ -31,7 +31,8 @@ ABlasterCharacter::ABlasterCharacter()
 	CombatComponent = CreateDefaultSubobject<UcombatComponent>(TEXT("CombatComponent"));
 
 	
-
+	// 初始化开火模式
+	FireMode = EFireMode::Single;
 }
 
 UCameraComponent* ABlasterCharacter::GetCameraComponent() const
@@ -45,6 +46,8 @@ void ABlasterCharacter::BeginPlay()
 	Super::BeginPlay();
 	
 }
+
+
 
 // Called every frame
 void ABlasterCharacter::Tick(float DeltaTime)
@@ -102,6 +105,9 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		//Fire
 		EnhancedInputComponent->BindAction(IA_Fire, ETriggerEvent::Started, this, &ABlasterCharacter::Fire_Pressed);
 		EnhancedInputComponent->BindAction(IA_Fire, ETriggerEvent::Completed, this, &ABlasterCharacter::Fire_Released);
+
+		// Toggle fire mode
+		EnhancedInputComponent->BindAction(IA_ToggleFireMode, ETriggerEvent::Started, this, &ABlasterCharacter::ToggleFireMode);
 	}
 
 }
@@ -198,6 +204,20 @@ void ABlasterCharacter::Aim_Released()
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("CombatComponent->IsAiming = false;"));
 }
 
+void ABlasterCharacter::ToggleFireMode()
+{
+	if (FireMode == EFireMode::Single)
+	{
+		FireMode = EFireMode::Auto;
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Fire Mode: Auto"));
+	}
+	else
+	{
+		FireMode = EFireMode::Single;
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Fire Mode: Single"));
+	}
+}
+
 void ABlasterCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
@@ -213,8 +233,14 @@ void ABlasterCharacter::Fire_Pressed()
 	if (CombatComponent && CombatComponent->IsWeaponEquipped && CombatComponent->CurrentWeapon)
 	{
 		IsFire = true;
-		PlayFireMontage();
-		CombatComponent->CurrentWeapon->Fire();
+		if (FireMode == EFireMode::Single)
+		{
+			HandleFire();
+		}
+		else if (FireMode == EFireMode::Auto)
+		{
+			StartFire();
+		}
 	}
 }
 
@@ -223,6 +249,35 @@ void ABlasterCharacter::Fire_Released()
 	if (CombatComponent && CombatComponent->IsWeaponEquipped && CombatComponent->CurrentWeapon)
 	{
 		IsFire = false;
+		if (FireMode == EFireMode::Auto)
+		{
+			StopFire();
+		}
+	}
+}
+
+
+
+void ABlasterCharacter::StartFire()
+{
+	HandleFire();
+	if (CombatComponent && CombatComponent->IsWeaponEquipped && CombatComponent->CurrentWeapon)
+	{
+		GetWorld()->GetTimerManager().SetTimer(FireTimerHandle, this, &ABlasterCharacter::HandleFire, CombatComponent->CurrentWeapon->FireRate, true);
+	}
+}
+
+void ABlasterCharacter::StopFire()
+{
+	GetWorld()->GetTimerManager().ClearTimer(FireTimerHandle);
+}
+
+void ABlasterCharacter::HandleFire()
+{
+	if (CombatComponent && CombatComponent->IsWeaponEquipped && CombatComponent->CurrentWeapon)
+	{
+		PlayFireMontage();
+		CombatComponent->CurrentWeapon->Fire();
 	}
 }
 
