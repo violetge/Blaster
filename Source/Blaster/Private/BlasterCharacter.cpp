@@ -10,6 +10,11 @@
 #include "combatComponent.h"
 #include "weapon.h"
 #include "GameFramework/CharacterMovementComponent.h" 
+#include <BlasterPlayerController.h>
+#include "GameFramework/PlayerStart.h"
+#include <Kismet/GameplayStatics.h>
+#include <GameFramework/GameModeBase.h>
+#include <Blaster/GameMode/BlasterModeBase.h>
 
 // Sets default values
 ABlasterCharacter::ABlasterCharacter()
@@ -30,10 +35,93 @@ ABlasterCharacter::ABlasterCharacter()
 
 	CombatComponent = CreateDefaultSubobject<UcombatComponent>(TEXT("CombatComponent"));
 
+	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
+
 	
 	// 初始化开火模式
 	FireMode = EFireMode::Single;
 }
+
+void ABlasterCharacter::HandleDeath()
+{
+	// 打印角色死亡
+	UE_LOG(LogTemp, Display, TEXT("HandleDeath"));
+
+	PlayDeathtMontage();
+
+	// 使角色无法移动
+	//GetCharacterMovement()->DisableMovement();
+	//GetCharacterMovement()->StopMovementImmediately();
+
+	//重生的相关逻辑
+	//ABlasterPlayerController* PlayerController = Cast<ABlasterPlayerController>(GetController());
+	//if (PlayerController)
+	//{
+	//	GetWorld()->GetTimerManager().SetTimer(RespawnTimerHandle, this, &ABlasterCharacter::Respawn, 2, false);
+	//}
+	//else
+	//{
+	//	GetWorld()->GetTimerManager().SetTimer(RespawnTimerHandle, this, &ABlasterCharacter::Respawn, 2, false);
+	//	UE_LOG(LogTemp, Error, TEXT("PlayerController is invalid!"));
+	//}
+}
+
+
+
+//
+//void ABlasterCharacter::Respawn()
+//{
+//	ABlasterPlayerController* PlayerController = Cast<ABlasterPlayerController>(GetController());
+//	AActor* ChosenPlayerStart = ChooseRandomPlayerStart();
+//	if (ChosenPlayerStart)
+//	{
+//		if (PlayerController)
+//		{
+//			PlayerController->UnPossess();
+//		}
+//		Destroy();
+//
+//		ABlasterModeBase* GameMode = GetWorld()->GetAuthGameMode<ABlasterModeBase>();
+//		if (GameMode)
+//		{
+//			if (PlayerController)
+//			{
+//				GameMode->RestartPlayerAtPlayerStart(PlayerController, ChosenPlayerStart);
+//			}
+//			else
+//			{
+//				// 如果没有玩家控制器，直接生成新的敌人角色
+//				FActorSpawnParameters SpawnParams;
+//				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+//				ABlasterCharacter* NewEnemy = GetWorld()->SpawnActor<ABlasterCharacter>(GetClass(), ChosenPlayerStart->GetActorLocation(), ChosenPlayerStart->GetActorRotation(), SpawnParams);
+//				UE_LOG(LogTemp, Display, TEXT("RespawnEnemyCharacter"));
+//			}
+//		}
+//		// 打印重生
+//		UE_LOG(LogTemp, Display, TEXT("RespawnCharacter"));
+//	}
+//}
+//
+//AActor* ABlasterCharacter::ChooseRandomPlayerStart()
+//{
+//	UWorld* World = GetWorld();
+//	if (World == nullptr) return nullptr;
+//
+//	// 获取所有的PlayerStart
+//	TArray<AActor*> PlayerStarts;
+//	UGameplayStatics::GetAllActorsOfClass(World, APlayerStart::StaticClass(), PlayerStarts);
+//
+//	if (PlayerStarts.Num() > 0)
+//	{
+//		int32 RandomIndex = FMath::RandRange(0, PlayerStarts.Num() - 1);
+//		// 打印重生点
+//		UE_LOG(LogTemp, Display, TEXT("PlayerStarts: %s"), *PlayerStarts[RandomIndex]->GetName());
+//		return PlayerStarts[RandomIndex];
+//	}
+//
+//	return nullptr;
+//}
+
 
 UCameraComponent* ABlasterCharacter::GetCameraComponent() const
 {
@@ -45,6 +133,7 @@ void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
+
 }
 
 
@@ -53,6 +142,7 @@ void ABlasterCharacter::BeginPlay()
 void ABlasterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
 
 
 	UpdateWeaponGripTransform();
@@ -64,6 +154,20 @@ void ABlasterCharacter::Tick(float DeltaTime)
 		UpdateWeaponRotation();
 	}
 
+}
+
+float ABlasterCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+	// 检查健康组件是否存在
+	if (HealthComponent)
+	{
+		// 调用健康组件的 DecreaseHealth 方法
+		HealthComponent->DecreaseHealth(ActualDamage);
+	}
+
+	return ActualDamage;
 }
 
 // Called to bind functionality to input
@@ -108,6 +212,9 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 		// Toggle fire mode
 		EnhancedInputComponent->BindAction(IA_ToggleFireMode, ETriggerEvent::Started, this, &ABlasterCharacter::ToggleFireMode);
+
+		// Reload weapon
+		EnhancedInputComponent->BindAction(IA_Reload, ETriggerEvent::Started, this, &ABlasterCharacter::ReloadWeapon);
 	}
 
 }
@@ -215,6 +322,20 @@ void ABlasterCharacter::ToggleFireMode()
 	{
 		FireMode = EFireMode::Single;
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Fire Mode: Single"));
+	}
+}
+
+void ABlasterCharacter::ReloadWeapon()
+{
+	if (CombatComponent && CombatComponent->IsWeaponEquipped && CombatComponent->CurrentWeapon && CombatComponent->CurrentWeapon->BCanFire)
+	{
+		PlayReloadMontage();
+		int32 AmmoAmount = CombatComponent->CurrentWeapon->GetCurrentAmmo();
+		CombatComponent->CurrentWeapon->Reload(AmmoAmount);
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("No weapon equipped!"));
 	}
 }
 

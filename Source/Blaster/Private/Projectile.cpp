@@ -4,6 +4,10 @@
 #include "Projectile.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Particles/ParticleSystem.h"
+#include "Sound/SoundBase.h"
+#include <BlasterCharacter.h>
 
 // Sets default values
 AProjectile::AProjectile()
@@ -12,9 +16,18 @@ AProjectile::AProjectile()
 	PrimaryActorTick.bCanEverTick = true;
 
 	 // set up a notification for when this component hits something blocking
+	ProjectileMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ProjectileMesh"));
 
-	
+	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComp"));
 
+	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
+
+
+	// ƒ¨»œ Ù–‘
+	Damage = 100.f;
+	ExplosionRadius = 100.f;
+	//bCanPenetrate = false;
+	LifeSpan = 5.f;
 }
 
 
@@ -34,6 +47,56 @@ void AProjectile::Tick(float DeltaTime)
 }
 
 
+void AProjectile::DestroyProjectile()
+{
+	Destroy();
+}
+
+void AProjectile::SetInstigatorActor(AActor* NewInstigator)
+{
+	InstigatorActor = NewInstigator;
+}
+
+float AProjectile::GetDamage() const
+{
+	return Damage;
+}
+
 void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
+	Explode();
+
+
+
+	DestroyProjectile();
+}
+
+
+
+
+
+void AProjectile::Explode() 
+{
+	if (ExplosionEffect)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorLocation(), GetActorRotation());
+	}
+
+	if (ExplosionSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, ExplosionSound, GetActorLocation());
+	}
+
+	// ”¶”√±¨’®∑∂Œß…À∫¶
+	UGameplayStatics::ApplyRadialDamage(
+		this,                           // Damage Causer
+		Damage,                         // Base Damage
+		GetActorLocation(),             // Origin of the explosion
+		ExplosionRadius,                // Radius of the explosion
+		nullptr,                        // Damage type (can be nullptr for default)
+		TArray<AActor*>(),              // Actors to ignore
+		this,                           // Damage causer (this projectile)
+		GetInstigatorController(),      // Instigator controller
+		true                            // Do full damage
+	);
 }

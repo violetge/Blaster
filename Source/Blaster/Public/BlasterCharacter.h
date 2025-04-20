@@ -7,6 +7,7 @@
 #include "InputActionValue.h"
 #include "InputMappingContext.h"
 #include "Animation/AnimMontage.h" 
+#include "HealthComponent.h"
 #include "BlasterCharacter.generated.h"
 
 class UInputComponent;
@@ -15,6 +16,7 @@ class USpringArmComponent;
 class UinPutMappingContext;
 class UInputAction;
 class UcombatComponent;
+class UHealthComponent;
 class Aweapon;
 class UCharacterMovementComponent;
 class UAnimMontage;
@@ -35,13 +37,25 @@ public:
 	// Sets default values for this character's properties
 	ABlasterCharacter();
 
+	void HandleDeath();
+	//void Respawn();
+	//AActor* ChooseRandomPlayerStart();
+	//FTimerHandle RespawnTimerHandle;
+
+
 	FORCEINLINE UCameraComponent* GetCameraComponent()const;
 	//C++定义 蓝图实现
 	UFUNCTION(BlueprintImplementableEvent, Category = "MyBlueprintFunctions")
 	void PlayFireMontage();
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "MyBlueprintFunctions")
+	UFUNCTION(BlueprintImplementableEvent, Category = "MyBlueprintFunct ions")
 	void PlayHitReactMontage();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "MyBlueprintFunctions")
+	void PlayDeathtMontage();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "MyBlueprintFunctions")
+	void PlayReloadMontage();
 
 
 	// Add this declaration to the ABlasterCharacter class
@@ -55,6 +69,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void UpdateWeaponRotation();
+
+	void ReloadWeapon();
 
 
 protected:
@@ -72,6 +88,7 @@ protected:
 	void Fire_Pressed();
 	void Fire_Released();
 	void ToggleFireMode();
+
 	void PostInitializeComponents() override;
 
 
@@ -93,6 +110,10 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	// 重写 TakeDamage 函数
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
+
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
@@ -108,11 +129,18 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UcombatComponent* CombatComponent;
 
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UHealthComponent* HealthComponent;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Montage")
 	UAnimMontage* FireWeaponMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Montage")
 	UAnimMontage* HitReactMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Montage")
+	UAnimMontage* DeathMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputMappingContext* InputMappingContext;
@@ -125,6 +153,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputAction* IA_Aim;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputAction* IA_Reload;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	class UInputAction* IA_Fire;

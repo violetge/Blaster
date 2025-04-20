@@ -46,5 +46,6 @@ public:
 	
 	//角色在ABlasterCharacter. cpp 中赋值
 	ABlasterCharacter* OwnerCharacter;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	Aweapon* CurrentWeapon;
 };

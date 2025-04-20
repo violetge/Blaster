@@ -9,7 +9,6 @@
 #include "Camera/CameraComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "BulletShell.h"
-#include "Bullet.h"
 
 // Sets default values
 Aweapon::Aweapon()
@@ -40,6 +39,11 @@ Aweapon::Aweapon()
 	ArrowComponent->SetupAttachment(SceneComponent);
 
 
+	BCanFire = true;
+	// 初始化弹药
+	MaxAmmo = 30;
+	CurrentAmmo = MaxAmmo;
+	BackupAmmo = 90;
 }
 
 
@@ -82,6 +86,35 @@ FTransform Aweapon::GetGripSocketTransform() const
 	return FTransform::Identity;
 }
 
+void Aweapon::Reload(int32 AmmoAmount)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Reload")));
+	int32 AmmoNeeded = MaxAmmo - CurrentAmmo;
+	int32 AmmoToReload = FMath::Min(AmmoAmount, AmmoNeeded);
+	CurrentAmmo += AmmoToReload;
+	BackupAmmo -= AmmoToReload;
+}
+
+void Aweapon::EjectBulletShell()
+{
+	// 生成弹壳
+	if (WeaponMesh && BulletShellClass)
+	{
+		const USkeletalMeshSocket* AmmoEjectSocket = WeaponMesh->GetSocketByName(FName("AmmoEject"));
+		if (AmmoEjectSocket)
+		{
+			FTransform SocketTransform = AmmoEjectSocket->GetSocketTransform(WeaponMesh);
+
+			UWorld* World = GetWorld();
+			if (World)
+			{
+				ABulletShell* BulletShell = World->SpawnActor<ABulletShell>(BulletShellClass, SocketTransform.GetLocation(), SocketTransform.GetRotation().Rotator());
+				BulletShell->ApplyRandomForce();
+			}
+		}
+	}
+}
+
 void Aweapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	/*UE_LOG(LogTemp, Warning, TEXT("Overlap"));*/
@@ -112,72 +145,76 @@ void Aweapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 // 其实射线的EDN应该是在屏幕的中心点 要不然人物动画会让武器乱动 直直的发射是不会在屏幕中心的
 void Aweapon::Fire()
 {
-	WeaponMesh->PlayAnimation(WeaponFire, false);
-
-	FVector Start = ArrowComponent->GetComponentLocation();   
-	FVector End;
-
-	//获取屏幕中心点
-	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
-	if (PlayerController)
+	if (CurrentAmmo > 0 && BCanFire)
 	{
-		// 获取摄像机的位置和旋转
-		FVector CameraLocation;
-		FRotator CameraRotation;
-		PlayerController->GetPlayerViewPoint(CameraLocation, CameraRotation);
 
-		// 计算摄像机正前方终点（屏幕中心对应的世界坐标方向）
-		FVector CameraDirection = CameraRotation.Vector();
-		End = CameraLocation + CameraDirection * 10000.0f; // 射线长度设为10000单位
+		WeaponMesh->PlayAnimation(WeaponFire, false);
 
-		// 调整射线起点为武器位置，方向指向摄像机瞄准点
-		FVector WeaponToEnd = End - Start;
-		WeaponToEnd.Normalize();
-		End = Start + WeaponToEnd * 10000.0f; // 保持射线长度一致
+		FVector Start = ArrowComponent->GetComponentLocation();
+		FVector End;
 
-		 //设置武器的旋转，使其与射线方向一致
-		FRotator WeaponRotation = WeaponToEnd.Rotation();
-		SetActorRotation(WeaponRotation);
-
-
-	}
-
-	FHitResult HitResult;
-	FCollisionQueryParams CollisionParams;
-	CollisionParams.AddIgnoredActor(this); // 忽略武器自身
-	CollisionParams.AddIgnoredActor(GetOwner()); // 忽略武器的拥有者
-	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, CollisionParams);
-
-	// 绘制射线
-	DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 1, 0, 1);
-
-	if (bHit && HitResult.GetActor())
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Hit: %s"), *HitResult.GetActor()->GetName()));
-
-		// 检查是否击中了 ABlasterCharacter
-		ABlasterCharacter* HitCharacter = Cast<ABlasterCharacter>(HitResult.GetActor());
-		if (HitCharacter && HitResult.Component == HitCharacter->GetMesh())
+		//获取屏幕中心点
+		APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+		if (PlayerController)
 		{
-			// 调用 PlayHitReactMontage
-			HitCharacter->PlayHitReactMontage();
+			// 获取摄像机的位置和旋转
+			FVector CameraLocation;
+			FRotator CameraRotation;
+			PlayerController->GetPlayerViewPoint(CameraLocation, CameraRotation);
+
+			// 计算摄像机正前方终点（屏幕中心对应的世界坐标方向）
+			FVector CameraDirection = CameraRotation.Vector();
+			End = CameraLocation + CameraDirection * 10000.0f; // 射线长度设为10000单位
+
+			// 调整射线起点为武器位置，方向指向摄像机瞄准点
+			FVector WeaponToEnd = End - Start;
+			WeaponToEnd.Normalize();
+			End = Start + WeaponToEnd * 10000.0f; // 保持射线长度一致
+
+			//设置武器的旋转，使其与射线方向一致
+			FRotator WeaponRotation = WeaponToEnd.Rotation();
+			SetActorRotation(WeaponRotation);
+
+
 		}
-	}
 
-	// 生成弹壳
-	if (WeaponMesh && BulletShellClass)
-	{
-		const USkeletalMeshSocket* AmmoEjectSocket = WeaponMesh->GetSocketByName(FName("AmmoEject"));
-		if (AmmoEjectSocket)
+		FHitResult HitResult;
+		FCollisionQueryParams CollisionParams;
+		CollisionParams.AddIgnoredActor(this); // 忽略武器自身
+		CollisionParams.AddIgnoredActor(GetOwner()); // 忽略武器的拥有者
+		bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, CollisionParams);
+
+		// 绘制射线
+		DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 1, 0, 1);
+
+		if (bHit && HitResult.GetActor())
 		{
-			FTransform SocketTransform = AmmoEjectSocket->GetSocketTransform(WeaponMesh);
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Hit: %s"), *HitResult.GetActor()->GetName()));
 
-			UWorld* World = GetWorld();
-			if (World)
+			// 检查是否击中了 ABlasterCharacter
+			ABlasterCharacter* HitCharacter = Cast<ABlasterCharacter>(HitResult.GetActor());
+			if (HitCharacter && HitResult.Component == HitCharacter->GetMesh())
 			{
-				ABulletShell* BulletShell = World->SpawnActor<ABulletShell>(BulletShellClass, SocketTransform.GetLocation(), SocketTransform.GetRotation().Rotator());
-				BulletShell->ApplyRandomForce();
+				// 调用 PlayHitReactMontage
+				HitCharacter->PlayHitReactMontage();
+				if (HitCharacter->HealthComponent)
+				{
+					HitCharacter->HealthComponent->DecreaseHealth(Damage);
+				}
 			}
+		}
+		// 调用 EjectBulletShell 函数 生成弹壳
+		EjectBulletShell();
+
+		// 减少弹药数量
+		CurrentAmmo--;
+	}
+	else if (CurrentAmmo <= 0)
+	{
+		ABlasterCharacter* OwnerCharacter = Cast<ABlasterCharacter>(GetOwner());
+		if (OwnerCharacter)
+		{
+			OwnerCharacter->ReloadWeapon();
 		}
 	}
 }

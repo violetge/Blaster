@@ -41,7 +41,12 @@ public:
 	virtual void Fire() override;
 	FVector CurrentAimDirection; // 存储当前帧的瞄准方向
 
-	// 射击间隔
+	
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	float Damage;
+	// 射击间隔	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	float FireRate = 0;
 
@@ -60,7 +65,30 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "BulletShell Type")
 	TSubclassOf<class ABulletShell> BulletShellClass;
+
+	// 当前子弹数量
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ammo")
+	int32 CurrentAmmo;
+
+	// 后备子弹数量
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ammo")
+	int32 BackupAmmo;
+
+	// 装填弹药
+	UFUNCTION(BlueprintCallable, Category = "Ammo")
+	void Reload(int32 AmmoAmount);
+
+
+	int32 GetCurrentAmmo() const { return CurrentAmmo; }
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ammo")
+	bool BCanFire;
 private:
+	// 最大弹药容量
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ammo", meta = (AllowPrivateAccess = "true"))
+	int32 MaxAmmo;
+
+	void EjectBulletShell();
 
 	void OnSphereOverlap(
 		UPrimitiveComponent* OverlappedComponent,
