@@ -162,8 +162,18 @@ void Aweapon::Fire()
 			FRotator CameraRotation;
 			PlayerController->GetPlayerViewPoint(CameraLocation, CameraRotation);
 
+			// ====== 弹道扩散核心代码 ======
+			// 定义扩散角度（度），可放到成员变量
+			float SpreadAngle = 10.0f; // 例如2度，可根据武器类型调整
+			FRotator SpreadRotation = CameraRotation;
+			SpreadRotation.Yaw += FMath::FRandRange(-SpreadAngle, SpreadAngle);
+			SpreadRotation.Pitch += FMath::FRandRange(-SpreadAngle, SpreadAngle);
+
+
+
+
 			// 计算摄像机正前方终点（屏幕中心对应的世界坐标方向）
-			FVector CameraDirection = CameraRotation.Vector();
+			FVector CameraDirection = SpreadRotation.Vector();
 			End = CameraLocation + CameraDirection * 10000.0f; // 射线长度设为10000单位
 
 			// 调整射线起点为武器位置，方向指向摄像机瞄准点

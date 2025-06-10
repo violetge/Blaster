@@ -395,7 +395,7 @@ void ABlasterCharacter::StopFire()
 
 void ABlasterCharacter::HandleFire()
 {
-	if (CombatComponent && CombatComponent->IsWeaponEquipped && CombatComponent->CurrentWeapon)
+	if (CombatComponent && CombatComponent->IsWeaponEquipped && CombatComponent->CurrentWeapon && CombatComponent->CurrentWeapon->BCanFire)
 	{
 		PlayFireMontage();
 		CombatComponent->CurrentWeapon->Fire();

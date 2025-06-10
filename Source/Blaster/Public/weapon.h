@@ -83,12 +83,14 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ammo")
 	bool BCanFire;
+
+	void EjectBulletShell();
 private:
 	// ×î´óµ¯Ò©ÈÝÁ¿
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ammo", meta = (AllowPrivateAccess = "true"))
 	int32 MaxAmmo;
 
-	void EjectBulletShell();
+
 
 	void OnSphereOverlap(
 		UPrimitiveComponent* OverlappedComponent,
