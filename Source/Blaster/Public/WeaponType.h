@@ -1,15 +1,15 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
 
-/**
- * 
- */
-class BLASTER_API WeaponType
+UENUM(BlueprintType)
+enum class EWeaponType : uint8
 {
-public:
-	WeaponType();
-	~WeaponType();
+    EWT_None      UMETA(DisplayName = "None"),
+    EWT_Pistol    UMETA(DisplayName = "Pistol"),
+    EWT_Rifle     UMETA(DisplayName = "Rifle"),
+    EWT_Sniper    UMETA(DisplayName = "Sniper"),
+    EWT_Shotgun   UMETA(DisplayName = "Shotgun"),
+    EWT_Rocket    UMETA(DisplayName = "Rocket"),
+    EWT_MAX       UMETA(DisplayName = "DefaultMAX")
 };

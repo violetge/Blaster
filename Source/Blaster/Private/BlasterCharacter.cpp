@@ -14,6 +14,7 @@
 #include "GameFramework/PlayerStart.h"
 #include <Kismet/GameplayStatics.h>
 #include <GameFramework/GameModeBase.h>
+
 #include <Blaster/GameMode/BlasterModeBase.h>
 
 // Sets default values
@@ -327,11 +328,15 @@ void ABlasterCharacter::ToggleFireMode()
 
 void ABlasterCharacter::ReloadWeapon()
 {
-	if (CombatComponent && CombatComponent->IsWeaponEquipped && CombatComponent->CurrentWeapon && CombatComponent->CurrentWeapon->BCanFire)
+	if (CombatComponent && CombatComponent->IsWeaponEquipped && CombatComponent->CurrentWeapon && CombatComponent->CurrentWeapon->BCanFire && CombatComponent->CurrentWeapon->BackupAmmo > 0)
 	{
 		PlayReloadMontage();
-		int32 AmmoAmount = CombatComponent->CurrentWeapon->GetCurrentAmmo();
-		CombatComponent->CurrentWeapon->Reload(AmmoAmount);
+		int32 AmmoNeeded = CombatComponent->CurrentWeapon->MaxAmmo - CombatComponent->CurrentWeapon->CurrentAmmo;
+		int32 AmmoToReload = FMath::Min(AmmoNeeded, CombatComponent->CurrentWeapon->BackupAmmo);
+		if (AmmoToReload > 0)
+		{
+			CombatComponent->CurrentWeapon->Reload(AmmoToReload);
+		}
 	}
 	else
 	{
@@ -424,6 +429,3 @@ void ABlasterCharacter::UpdateWeaponRotation()
 		CombatComponent->CurrentWeapon->SetActorRotation(AimDirection);
 	}
 }
-
-
-

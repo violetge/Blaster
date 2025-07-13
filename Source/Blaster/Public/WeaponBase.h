@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "WeaponType.h"
 #include "WeaponBase.generated.h"
 
 class USceneComponent;
@@ -34,6 +35,8 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
 	USkeletalMeshComponent* WeaponMesh;
+
+	EWeaponType GetWeaponType() const { return WeaponType; }
 
 
 
@@ -70,4 +73,10 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	virtual void Fire();
+
+
+
+	// Œ‰∆˜¿‡–Õ
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	EWeaponType WeaponType = EWeaponType::EWT_None;
 };

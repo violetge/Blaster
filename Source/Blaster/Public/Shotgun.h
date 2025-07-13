@@ -28,5 +28,6 @@ protected:
 	// …¢µØ«π…¢…‰Ω«∂»£®∂»£©
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	float SpreadAngle;
+
 	
 };

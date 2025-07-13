@@ -78,17 +78,19 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Ammo")
 	void Reload(int32 AmmoAmount);
 
+	void EjectBulletShell();
+
 
 	int32 GetCurrentAmmo() const { return CurrentAmmo; }
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ammo")
 	bool BCanFire;
 
-	void EjectBulletShell();
-private:
+
 	// ×î´óµ¯Ò©ÈÝÁ¿
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ammo", meta = (AllowPrivateAccess = "true"))
 	int32 MaxAmmo;
+private:
 
 
 

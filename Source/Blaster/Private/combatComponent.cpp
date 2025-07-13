@@ -3,6 +3,7 @@
 #include "combatComponent.h"
 #include "weapon.h"
 #include "BlasterCharacter.h"
+#include "WeaponType.h"
 #include "Camera/CameraComponent.h" // Add this include to resolve the incomplete type error
 
 // Sets default values for this component's properties

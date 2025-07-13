@@ -11,6 +11,7 @@ AShotgun::AShotgun()
 {
 	PelletCount = 8;      // 默认8发弹丸
 	SpreadAngle = 8.0f;   // 默认8度散射
+	WeaponType = EWeaponType::EWT_Shotgun;
 }
 
 void AShotgun::Fire()

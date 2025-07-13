@@ -164,7 +164,7 @@ void Aweapon::Fire()
 
 			// ====== 弹道扩散核心代码 ======
 			// 定义扩散角度（度），可放到成员变量
-			float SpreadAngle = 10.0f; // 例如2度，可根据武器类型调整
+			float SpreadAngle = 2.0f; // 例如2度，可根据武器类型调整
 			FRotator SpreadRotation = CameraRotation;
 			SpreadRotation.Yaw += FMath::FRandRange(-SpreadAngle, SpreadAngle);
 			SpreadRotation.Pitch += FMath::FRandRange(-SpreadAngle, SpreadAngle);
