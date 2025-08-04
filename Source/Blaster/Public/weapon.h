@@ -78,6 +78,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Ammo")
 	void Reload(int32 AmmoAmount);
 
+	UFUNCTION(BlueprintCallable, Category = "Ammo")
+	void ShotGunReload();
+
 	void EjectBulletShell();
 
 

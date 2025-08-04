@@ -45,4 +45,7 @@ public:
 
     // 实现网络同步
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+    void SetHealth(float Amount) { Health = Amount; }
+	float GetMaxHealth() const { return MaxHealth; }
 };

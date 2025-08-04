@@ -95,6 +95,25 @@ void Aweapon::Reload(int32 AmmoAmount)
 	BackupAmmo -= AmmoToReload;
 }
 
+void Aweapon::ShotGunReload()
+{
+	if (CurrentAmmo < MaxAmmo && BackupAmmo > 0)
+	{
+		ABlasterCharacter* OwnerCharacter = Cast<ABlasterCharacter>(GetOwner());
+		if (CurrentAmmo == MaxAmmo || BackupAmmo == 0)
+		{
+			//跳转结束装填动画片段
+			UAnimInstance* AnimInstance = WeaponMesh->GetAnimInstance();
+			if (AnimInstance && OwnerCharacter->ReloadMontage)
+			{
+				AnimInstance->Montage_JumpToSection(FName("EndReload"));
+			}
+		}
+		CurrentAmmo += 1;
+		BackupAmmo -= 1;
+	}
+}
+
 void Aweapon::EjectBulletShell()
 {
 	// 生成弹壳

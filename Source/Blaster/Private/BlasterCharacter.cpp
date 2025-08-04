@@ -16,6 +16,7 @@
 #include <GameFramework/GameModeBase.h>
 
 #include <Blaster/GameMode/BlasterModeBase.h>
+#include <Grenade.h>
 
 // Sets default values
 ABlasterCharacter::ABlasterCharacter()
@@ -216,6 +217,9 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 		// Reload weapon
 		EnhancedInputComponent->BindAction(IA_Reload, ETriggerEvent::Started, this, &ABlasterCharacter::ReloadWeapon);
+
+		//Throw Grenade
+		EnhancedInputComponent->BindAction(IA_ThrowGrenade, ETriggerEvent::Started, this, &ABlasterCharacter::ThrowGrenade);
 	}
 
 }
@@ -326,6 +330,15 @@ void ABlasterCharacter::ToggleFireMode()
 	}
 }
 
+void ABlasterCharacter::ThrowGrenade()
+{
+
+	PlayThrowGrenadeMontage();
+
+	SpawnAndThrowGrenade();
+}
+
+
 void ABlasterCharacter::ReloadWeapon()
 {
 	if (CombatComponent && CombatComponent->IsWeaponEquipped && CombatComponent->CurrentWeapon && CombatComponent->CurrentWeapon->BCanFire && CombatComponent->CurrentWeapon->BackupAmmo > 0)
@@ -342,6 +355,11 @@ void ABlasterCharacter::ReloadWeapon()
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("No weapon equipped!"));
 	}
+}
+
+void ABlasterCharacter::SpawnAndThrowGrenade()
+{
+	AGrenade* Grenade = GetWorld()->SpawnActor<AGrenade>(GrenadeClass,GetActorLocation(),GetActorRotation());
 }
 
 void ABlasterCharacter::PostInitializeComponents()

@@ -1,4 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -8,6 +7,7 @@
 #include "InputMappingContext.h"
 #include "Animation/AnimMontage.h" 
 #include "HealthComponent.h"
+#include "BuffComponent.h"
 #include "BlasterCharacter.generated.h"
 
 class UInputComponent;
@@ -37,10 +37,18 @@ public:
 	// Sets default values for this character's properties
 	ABlasterCharacter();
 
+
 	void HandleDeath();
+	FORCEINLINE UBuffComponent* GetBuffComponent() const { return BuffComponent; }	
+	FORCEINLINE UHealthComponent* GetHealthComponent() const { return HealthComponent; }
 	//void Respawn();
 	//AActor* ChooseRandomPlayerStart();
 	//FTimerHandle RespawnTimerHandle;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	int GrenadeCount;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	TSubclassOf<class AGrenade>GrenadeClass;
 
 
 	FORCEINLINE UCameraComponent* GetCameraComponent()const;
@@ -48,7 +56,7 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "MyBlueprintFunctions")
 	void PlayFireMontage();
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "MyBlueprintFunct ions")
+	UFUNCTION(BlueprintImplementableEvent, Category = "MyBlueprintFunctions")
 	void PlayHitReactMontage();
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "MyBlueprintFunctions")
@@ -56,6 +64,9 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "MyBlueprintFunctions")
 	void PlayReloadMontage();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "MyBlueprintFunctions")
+	void PlayThrowGrenadeMontage();
 
 
 	// Add this declaration to the ABlasterCharacter class
@@ -71,6 +82,7 @@ public:
 	void UpdateWeaponRotation();
 
 	void ReloadWeapon();
+	void SpawnAndThrowGrenade();
 
 
 protected:
@@ -88,6 +100,7 @@ protected:
 	void Fire_Pressed();
 	void Fire_Released();
 	void ToggleFireMode();
+	void ThrowGrenade();
 
 	void PostInitializeComponents() override;
 
@@ -133,6 +146,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UHealthComponent* HealthComponent;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UBuffComponent* BuffComponent;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Montage")
 	UAnimMontage* FireWeaponMontage;
 
@@ -141,6 +157,12 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Montage")
 	UAnimMontage* DeathMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Montage")
+	UAnimMontage* ReloadMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Montage")
+	UAnimMontage* ThrowGrenadeMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputMappingContext* InputMappingContext;
@@ -177,6 +199,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputAction* IA_ToggleFireMode;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputAction* IA_ThrowGrenade;
 
 	//武器在weapon.cpp重叠函数中赋值
 	Aweapon* overlappingweapon;
