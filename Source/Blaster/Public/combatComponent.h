@@ -48,4 +48,13 @@ public:
 	ABlasterCharacter* OwnerCharacter;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	Aweapon* CurrentWeapon;
+
+	//µÚ¶þ°ÑÎäÆ÷
+	Aweapon* SecondaryWeapon;
+
+	void EquipPrimaryWeapon(Aweapon* Weapon);
+	void EquipSecondaryWeapon(Aweapon* Weapon);
+
+
+	void SwapWeapons();
 };

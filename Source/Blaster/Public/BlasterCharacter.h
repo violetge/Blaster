@@ -101,6 +101,7 @@ protected:
 	void Fire_Released();
 	void ToggleFireMode();
 	void ThrowGrenade();
+	void SwapWeapons();
 
 	void PostInitializeComponents() override;
 
@@ -203,8 +204,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputAction* IA_ThrowGrenade;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputAction* IA_SwapWeapons;
+
 	//武器在weapon.cpp重叠函数中赋值
 	Aweapon* overlappingweapon;
+
+
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
 	FTransform WeaponGripTransform;

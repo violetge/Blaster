@@ -220,6 +220,9 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 		//Throw Grenade
 		EnhancedInputComponent->BindAction(IA_ThrowGrenade, ETriggerEvent::Started, this, &ABlasterCharacter::ThrowGrenade);
+
+		//swap weapon
+		EnhancedInputComponent->BindAction(IA_SwapWeapons, ETriggerEvent::Started, this, &ABlasterCharacter::SwapWeapons);
 	}
 
 }
@@ -262,16 +265,16 @@ void ABlasterCharacter::Action_ControllerYaw(const FInputActionValue& Value)
 
 void ABlasterCharacter::AttachWeapon()
 {
-	if (CombatComponent->IsWeaponEquipped)
-	{
-		CombatComponent->UnequipWeapon();
-	}
-	else 
-	{
+	//if (CombatComponent->IsWeaponEquipped)
+	//{
+	//	CombatComponent->UnequipWeapon();
+	//}
+	//else 
+	//{
 
-		CombatComponent->EquipWeapon(overlappingweapon);
-	}
-	UE_LOG(LogTemp, Display, TEXT("Started"));
+	//	CombatComponent->EquipWeapon(overlappingweapon);
+	//}
+	CombatComponent->EquipWeapon(overlappingweapon);
 }
 
 
@@ -354,6 +357,15 @@ void ABlasterCharacter::ReloadWeapon()
 	else
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("No weapon equipped!"));
+	}
+}
+
+void ABlasterCharacter::SwapWeapons()
+{
+		if (CombatComponent && CombatComponent->IsWeaponEquipped)
+	{
+		// ½»»»ÎäÆ÷
+		CombatComponent->SwapWeapons();
 	}
 }
 

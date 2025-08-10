@@ -23,15 +23,24 @@ UcombatComponent::UcombatComponent()
 
 void UcombatComponent::EquipWeapon(Aweapon* Weapon)
 {
-	if (Weapon)
+	if (CurrentWeapon == nullptr && SecondaryWeapon == nullptr)
 	{
-		CurrentWeapon = Weapon;
-		CurrentWeapon->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, "WeaponSocket");
-		Weapon->SetOwner(OwnerCharacter);
-		IsWeaponEquipped = true;
-		Weapon->ShowpickupWidget(false);
-		CurrentWeapon->SetActorEnableCollision(false);
+		EquipPrimaryWeapon(Weapon);
 	}
+	else if (CurrentWeapon != nullptr && SecondaryWeapon == nullptr)
+	{
+		EquipSecondaryWeapon(Weapon);
+	}
+	else if(CurrentWeapon != nullptr && SecondaryWeapon != nullptr)
+	{
+		CurrentWeapon->SetActorEnableCollision(true);
+		CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		CurrentWeapon->SetOwner(nullptr);
+		CurrentWeapon->ShowpickupWidget(true);
+
+		EquipPrimaryWeapon(Weapon);
+	}
+
 }
 
 void UcombatComponent::UnequipWeapon()
@@ -85,4 +94,69 @@ void UcombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	InterpFOV(DeltaTime);
 
 
+}
+
+void UcombatComponent::EquipPrimaryWeapon(Aweapon* Weapon)
+{
+	if (Weapon == nullptr) return;
+
+	CurrentWeapon = Weapon;
+	CurrentWeapon->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, "WeaponSocket");
+	Weapon->SetOwner(OwnerCharacter);
+	IsWeaponEquipped = true;
+	Weapon->ShowpickupWidget(false);
+	CurrentWeapon->SetActorEnableCollision(false);
+}
+
+void UcombatComponent::EquipSecondaryWeapon(Aweapon* Weapon)
+{
+	if (Weapon == nullptr) return;
+
+	SecondaryWeapon = Weapon;
+	SecondaryWeapon->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, "SecondaryWeaponSocket");
+	SecondaryWeapon->SetOwner(OwnerCharacter);
+	SecondaryWeapon->ShowpickupWidget(false);
+	SecondaryWeapon->SetActorEnableCollision(false);
+}
+
+void UcombatComponent::SwapWeapons()
+{
+	// 检查是否有两把武器可以交换
+	if (CurrentWeapon == nullptr || SecondaryWeapon == nullptr) return;
+
+	// 备份当前武器和副武器的引用
+	Aweapon* TempWeapon = CurrentWeapon;
+
+	// 先分离两把武器
+	CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+	SecondaryWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+
+	// 交换武器引用
+	CurrentWeapon = SecondaryWeapon;
+	SecondaryWeapon = TempWeapon;
+
+	// 重新附加主武器
+	CurrentWeapon->AttachToComponent(
+		OwnerCharacter->GetMesh(),
+		FAttachmentTransformRules::SnapToTargetIncludingScale,
+		"WeaponSocket"
+	);
+
+	// 重新附加副武器
+	SecondaryWeapon->AttachToComponent(
+		OwnerCharacter->GetMesh(),
+		FAttachmentTransformRules::SnapToTargetIncludingScale,
+		"SecondaryWeaponSocket"
+	);
+
+	// 确保主武器是激活状态，副武器是非激活状态
+	CurrentWeapon->SetActorEnableCollision(false);
+	SecondaryWeapon->SetActorEnableCollision(false);
+
+	// 确保拾取控件显示状态正确
+	CurrentWeapon->ShowpickupWidget(false);
+	SecondaryWeapon->ShowpickupWidget(false);
+
+	// 更新武器状态标志
+	IsWeaponEquipped = true;
 }
