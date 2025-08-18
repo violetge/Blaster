@@ -28,8 +28,20 @@ ABlasterCharacter::ABlasterCharacter()
 
 
 	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
-	SpringArmComponent->SetupAttachment(GetMesh());
+	SpringArmComponent->SetupAttachment(GetCapsuleComponent());
 	SpringArmComponent->bUsePawnControlRotation = true;
+
+	// 启用摄像机平滑
+	SpringArmComponent->bEnableCameraLag = true;
+	SpringArmComponent->bEnableCameraRotationLag = true;
+	SpringArmComponent->CameraLagSpeed = 10.0f;
+	SpringArmComponent->CameraRotationLagSpeed = 10.0f;
+	SpringArmComponent->CameraLagMaxDistance = 100.0f;
+
+	CurrentSpringArmPosition = FVector::ZeroVector;
+	TargetSpringArmPosition = FVector::ZeroVector;
+
+
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
 	CameraComponent->SetupAttachment(SpringArmComponent,USpringArmComponent::SocketName);
@@ -134,7 +146,11 @@ UCameraComponent* ABlasterCharacter::GetCameraComponent() const
 void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	// 保存弹簧臂的原始位置
+	OriginalSpringArmPosition = SpringArmComponent->GetRelativeLocation();
+	CurrentSpringArmPosition = OriginalSpringArmPosition;
+	TargetSpringArmPosition = OriginalSpringArmPosition;
 
 }
 
@@ -148,7 +164,10 @@ void ABlasterCharacter::Tick(float DeltaTime)
 
 
 	UpdateWeaponGripTransform();
-
+	if (bIsCameraMovingForward)
+	{
+		UpdateCameraForwardMovement(DeltaTime);
+	}
 
 	// 只有在武器装备时才实时更新武器的旋转
 	if (CombatComponent && CombatComponent->IsWeaponEquipped)
@@ -203,6 +222,9 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 		//crouch
 		EnhancedInputComponent->BindAction(IA_Crouch, ETriggerEvent::Started, this, &ABlasterCharacter::Action_Crouch);
+
+		//prone
+		EnhancedInputComponent->BindAction(IA_Prone, ETriggerEvent::Started, this, &ABlasterCharacter::Action_Prone);
 
 		//Aim
 		EnhancedInputComponent->BindAction(IA_Aim, ETriggerEvent::Started, this, &ABlasterCharacter::Aim_Pressed);
@@ -283,12 +305,21 @@ void ABlasterCharacter::Action_Crouch()
 {
 	//别忘记加这个 蓝图里设置也可以 不然bIsCrouched不会变的哦
 	/*GetCharacterMovement()->NavAgentProps.bCanCrouch = true;*/
+
+	if (bIsProne)
+	{
+		// 从趴下状态转换为蹲下状态
+		bIsProne = false;
+		Crouch();
+	}
+
 	if (this->bIsCrouched)
 	{
 		UnCrouch();
 		bIsCrouched = false;
 		GetCharacterMovement()->MaxWalkSpeed = 400.0f;
-		GetCapsuleComponent()->SetCapsuleHalfHeight(88.0f);
+		//GetCapsuleComponent()->SetCapsuleHalfHeight(88.0f);
+		TargetSpringArmPosition = OriginalSpringArmPosition;
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("this->bIsCrouched = false"));
 	}
 	else
@@ -297,11 +328,55 @@ void ABlasterCharacter::Action_Crouch()
 		bIsCrouched = true;
 		GetCharacterMovement()->MaxWalkSpeed = 300.0f;
 		//更改胶囊体大小
-		GetCapsuleComponent()->SetCapsuleHalfHeight(60.0f);
+		//GetCapsuleComponent()->SetCapsuleHalfHeight(60.0f);
+		TargetSpringArmPosition = OriginalSpringArmPosition + FVector(CrouchCameraForwardOffset, 0.0f, 0.0f);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("this->bIsCrouched = ture"));
-
 	}
+	bIsCameraMovingForward = true;
 }
+
+
+void ABlasterCharacter::Action_Prone()
+{
+	// 如果正在蹲下，先取消蹲下
+	if (this->bIsCrouched)
+	{
+		UnCrouch();
+		bIsCrouched = false;
+	}
+
+	if (bIsProne)
+	{
+		// 从趴下状态恢复
+		bIsProne = false;
+		
+
+		// 设置目标位置为原始位置
+		TargetSpringArmPosition = OriginalSpringArmPosition;
+
+		// 打印信息到屏幕
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("bIsProne = false;"));
+	}
+	else
+	{
+		// 进入趴下状态
+		bIsProne = true;
+		
+
+		// 设置目标位置 - 向前移动更多，并稍微下降
+		TargetSpringArmPosition = OriginalSpringArmPosition +
+			FVector(ProneCameraForwardOffset, 0.0f, -ProneCameraDownOffset);
+
+		// 打印信息到屏幕
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("bIsProne = true;"));
+	}
+
+	// 启用摄像机移动
+	bIsCameraMovingForward = true;
+}
+
+
+
 
 void ABlasterCharacter::Aim_Pressed()
 {
@@ -413,6 +488,27 @@ void ABlasterCharacter::Fire_Released()
 }
 
 
+
+void ABlasterCharacter::UpdateCameraForwardMovement(float DeltaTime)
+{
+	// 计算当前位置到目标位置的插值
+	FVector NewLocation = FMath::VInterpTo(
+		SpringArmComponent->GetRelativeLocation(),
+		TargetSpringArmPosition,
+		DeltaTime,
+		CrouchCameraForwardInterpSpeed
+	);
+
+	// 更新弹簧臂位置
+	SpringArmComponent->SetRelativeLocation(NewLocation);
+
+	// 检查是否已经接近目标位置
+	if (FVector::Dist(SpringArmComponent->GetRelativeLocation(), TargetSpringArmPosition) < 1.0f)
+	{
+		bIsCameraMovingForward = false;
+		SpringArmComponent->SetRelativeLocation(TargetSpringArmPosition);
+	}
+}
 
 void ABlasterCharacter::StartFire()
 {

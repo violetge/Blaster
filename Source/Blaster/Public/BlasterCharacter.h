@@ -74,6 +74,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	bool IsFire;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character", meta = (AllowPrivateAccess = "true"))
+	bool bIsProne = false;
+
 	// 声明一个函数，用于获取射线方向
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	FRotator GetAimDirection() const;
@@ -94,6 +97,7 @@ protected:
 	void Action_ControllerPitch(const FInputActionValue& Value);
 	void Action_ControllerYaw(const FInputActionValue& Value);
 	void Action_Crouch();
+	void Action_Prone();
 	void Aim_Pressed();
 	void Aim_Released();
 	void AttachWeapon();
@@ -107,6 +111,39 @@ protected:
 
 
 private:
+
+	// 蹲下时摄像机向前移动的距离
+	UPROPERTY(EditAnywhere, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	float CrouchCameraForwardOffset = 70.0f;
+
+	// 摄像机移动插值速度
+	UPROPERTY(EditAnywhere, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	float CrouchCameraForwardInterpSpeed = 10.0f;
+
+	// 趴下时摄像机向前移动的距离
+	UPROPERTY(EditAnywhere, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	float ProneCameraForwardOffset = 150.0f;
+
+	// 趴下时摄像机向下移动的距离
+	UPROPERTY(EditAnywhere, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	float ProneCameraDownOffset = 30.0f;
+
+	// 正在向前移动摄像机
+	bool bIsCameraMovingForward = false;
+
+	FVector OriginalSpringArmPosition;
+
+	// 目标弹簧臂位置
+	FVector TargetSpringArmPosition;
+
+	// 当前弹簧臂位置
+	FVector CurrentSpringArmPosition;
+
+	// 处理摄像机向前移动
+	void UpdateCameraForwardMovement(float DeltaTime);
+
+
+
 	// 计时器句柄
 	FTimerHandle FireTimerHandle;
 
@@ -173,6 +210,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputAction* IA_Crouch;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputAction* IA_Prone;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputAction* IA_Aim;
